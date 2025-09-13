@@ -1,0 +1,50 @@
+# 国际象棋比赛管理系统 - Python依赖包
+
+# 核心框架
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+
+# 数据库和ORM
+sqlalchemy>=2.0.23
+alembic>=1.12.1
+
+# 数据验证和序列化
+pydantic>=2.5.0
+
+# 数据库驱动 (根据需要选择)
+# SQLite (默认包含在Python中)
+# MySQL
+PyMySQL>=1.1.0
+# PostgreSQL
+psycopg2-binary>=2.9.9
+
+# 工具库
+python-dateutil>=2.8.2
+python-multipart>=0.0.6
+
+# 开发和测试
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+pytest-cov>=4.1.0
+httpx>=0.25.2
+
+# 文档生成
+mkdocs>=1.5.3
+mkdocs-material>=9.4.8
+
+# 代码质量
+black>=23.11.0
+flake8>=6.1.0
+isort>=5.12.0
+
+# 安全
+cryptography>=41.0.7
+
+# 日志和监控
+structlog>=23.2.0
+
+# 配置管理
+python-dotenv>=1.0.0
+
+# 时间处理
+pytz>=2023.3
