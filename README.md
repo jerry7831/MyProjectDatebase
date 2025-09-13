@@ -126,33 +126,66 @@
 ## 技术架构
 
 ### 技术栈
-- **数据库**: MySQL/PostgreSQL/SQLite
-- **ORM**: SQLAlchemy
+- **数据库**: Oracle Database (主要支持)
+- **ORM**: SQLAlchemy with cx_Oracle
 - **API框架**: FastAPI
 - **数据验证**: Pydantic
 - **Web服务器**: Uvicorn
 - **Python版本**: 3.8+
+- **数据库驱动**: cx_Oracle / python-oracledb
 
 ### 项目结构
 ```
 chess_tournament_system/
-├── chess_tournament_model.sql      # SQL数据库定义
-├── chess_tournament_models.py      # SQLAlchemy ORM模型
+├── chess_tournament_model.sql      # Oracle SQL数据库定义
+├── chess_tournament_models.py      # SQLAlchemy ORM模型（Oracle适配）
 ├── chess_tournament_service.py     # 业务逻辑服务层
 ├── chess_tournament_api.py         # FastAPI REST接口
-├── requirements.txt                # Python依赖包
+├── requirements.txt                # Python依赖包（包含cx_Oracle）
+├── oracle_config.py                # Oracle数据库连接配置
 ├── README.md                       # 项目文档
-└── tests/                          # 测试文件
-    ├── test_models.py
-    ├── test_service.py
-    └── test_api.py
+└── test_demo.py                    # Oracle连接测试
+```
+
+## Oracle数据库特性
+
+### Oracle特定实现
+1. **数据类型映射**
+   - `NUMBER` - 用于所有数值类型（INTEGER、DECIMAL）
+   - `VARCHAR2` - 可变长度字符串（替代VARCHAR）
+   - `CLOB` - 大文本数据（替代TEXT）
+   - `DATE` - 日期和时间数据
+
+2. **序列和触发器**
+   - 使用Oracle序列（SEQUENCE）实现自增主键
+   - 触发器自动设置主键值
+   - 支持并发安全的ID生成
+
+3. **约束命名**
+   - 所有约束都有明确的命名规范
+   - 便于管理和维护数据库结构
+
+4. **性能优化**
+   - 利用Oracle的优化器进行查询优化
+   - 支持分区表（适用于大量历史数据）
+   - 索引策略针对Oracle进行优化
+
+### 连接配置示例
+```python
+# 数据库连接字符串示例
+ORACLE_DB_URL = "oracle+cx_oracle://username:password@hostname:port/?service_name=servicename"
+
+# 或使用TNS方式
+ORACLE_DB_URL = "oracle+cx_oracle://username:password@tnsname"
 ```
 
 ## 安装和部署
 
 ### 环境要求
 - Python 3.8+
-- 数据库系统 (MySQL/PostgreSQL/SQLite)
+- Oracle Database 10g+ (推荐19c或更高版本)
+- Oracle Instant Client (用于连接Oracle数据库)
+- 足够的数据库权限来创建表、序列、触发器和视图
 
 ### 安装步骤
 
@@ -176,13 +209,38 @@ pip install -r requirements.txt
 ```
 
 4. **数据库设置**
-```bash
-# 使用SQLite（开发环境）
-python -c "from chess_tournament_models import ChessDatabase; db=ChessDatabase(); db.create_tables()"
 
-# 或使用MySQL/PostgreSQL（生产环境）
-# 先创建数据库，然后运行SQL脚本
-mysql -u username -p < chess_tournament_model.sql
+首先确保Oracle数据库环境已经安装并运行，然后按以下步骤设置：
+
+**安装Oracle客户端驱动**
+```bash
+# 安装Oracle数据库驱动
+pip install cx_Oracle
+# 或使用新版本驱动
+pip install oracledb
+```
+
+**配置Oracle连接**
+```bash
+# 设置Oracle环境变量（如果使用Instant Client）
+export ORACLE_HOME=/path/to/oracle/instantclient
+export LD_LIBRARY_PATH=$ORACLE_HOME:$LD_LIBRARY_PATH
+export PATH=$ORACLE_HOME:$PATH
+```
+
+**创建数据库结构**
+```bash
+# 连接到Oracle数据库执行SQL脚本
+sqlplus username/password@hostname:port/service_name @chess_tournament_model.sql
+
+# 或使用SQL Developer/SQLcl工具执行脚本
+sql username/password@hostname:port/service_name @chess_tournament_model.sql
+```
+
+**验证安装**
+```bash
+# 测试Python连接
+python -c "import cx_Oracle; print('Oracle driver installed successfully')"
 ```
 
 5. **启动API服务器**
@@ -245,19 +303,23 @@ python chess_tournament_api.py
 ## 性能优化
 
 ### 索引策略
-- 在经常查询的字段上创建索引
+- 在经常查询的字段上创建Oracle B-tree索引
 - 复合索引优化多字段查询
-- 避免过多索引影响写入性能
+- 函数索引支持复杂查询优化
+- 避免过多索引影响DML性能
+- 利用Oracle统计信息优化查询计划
 
 ### 查询优化
-- 使用视图简化复杂查询
-- 分页查询处理大量数据
-- 缓存常用统计数据
+- 使用Oracle视图简化复杂查询
+- 分页查询处理大量数据（ROWNUM/ROW_NUMBER）
+- 缓存常用统计数据（结果缓存）
+- 利用Oracle Hints优化查询执行计划
 
 ### 数据库设计优化
-- 适当的数据类型选择
-- 表分区处理历史数据
-- 读写分离架构支持
+- 适当的Oracle数据类型选择
+- 表分区处理历史数据（按日期分区）
+- 并行查询支持大数据量处理
+- 读写分离架构支持（Oracle Active Data Guard）
 
 ## 扩展功能
 
@@ -294,31 +356,80 @@ python chess_tournament_api.py
 ## 部署建议
 
 ### 开发环境
-- SQLite数据库
+- Oracle Database Express Edition (开发测试)
 - 单机部署
 - 调试模式启动
 
 ### 生产环境
-- MySQL/PostgreSQL数据库
+- Oracle Database Enterprise Edition
+- RAC集群部署（高可用）
 - 负载均衡部署
-- 容器化部署 (Docker)
-- 监控和日志系统
+- 容器化部署 (Docker with Oracle Database)
+- 监控和日志系统（Oracle Enterprise Manager）
 
 ## 维护和升级
 
 ### 数据库迁移
-- 使用Alembic进行数据库版本管理
+- 使用Oracle的数据迁移工具进行版本管理
+- 利用Oracle的DDL版本控制特性
 - 向后兼容的结构变更
-- 数据备份和恢复策略
+- Oracle数据泵（Data Pump）备份和恢复策略
+- RMAN备份策略
 
 ### 版本控制
 - API版本管理
 - 向下兼容性保证
 - 平滑升级方案
 
+## Oracle数据库注意事项
+
+### 常见问题排查
+
+1. **连接问题**
+   ```bash
+   # 检查Oracle服务状态
+   lsnrctl status
+   
+   # 测试数据库连接
+   sqlplus username/password@hostname:port/service_name
+   
+   # 检查Python驱动
+   python -c "import cx_Oracle; print(cx_Oracle.version)"
+   ```
+
+2. **权限配置**
+   - 确保用户具有CREATE TABLE、CREATE SEQUENCE、CREATE TRIGGER权限
+   - 如需创建视图，需要CREATE VIEW权限
+   - 生产环境建议创建专门的应用用户
+
+3. **字符集设置**
+   - 建议使用UTF-8字符集（AL32UTF8）
+   - 确保客户端和服务器字符集一致
+
+4. **性能调优**
+   - 定期更新表统计信息：`EXEC DBMS_STATS.GATHER_TABLE_STATS`
+   - 监控慢查询日志
+   - 使用Oracle AWR报告分析性能
+
+### Oracle版本兼容性
+- **最低支持版本**: Oracle 10g
+- **推荐版本**: Oracle 19c或更高
+- **企业版特性**: 分区、并行查询、高级安全等
+
+### 备份恢复策略
+```sql
+-- 定期备份脚本示例
+RMAN> BACKUP DATABASE PLUS ARCHIVELOG;
+RMAN> DELETE OBSOLETE;
+
+-- 逻辑备份（数据泵）
+expdp username/password directory=backup_dir dumpfile=chess_tournament_%U.dmp
+```
+
 ---
 
 **项目维护者**: [xiaolongzhu44]
 **最后更新**: 2025年9月
 **版本**: 1.0.0
+
 
