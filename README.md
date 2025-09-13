@@ -220,14 +220,6 @@ pip install cx_Oracle
 pip install oracledb
 ```
 
-**配置Oracle连接**
-```bash
-# 设置Oracle环境变量（如果使用Instant Client）
-export ORACLE_HOME=/path/to/oracle/instantclient
-export LD_LIBRARY_PATH=$ORACLE_HOME:$LD_LIBRARY_PATH
-export PATH=$ORACLE_HOME:$PATH
-```
-
 **创建数据库结构**
 ```bash
 # 连接到Oracle数据库执行SQL脚本
@@ -247,9 +239,6 @@ python -c "import cx_Oracle; print('Oracle driver installed successfully')"
 ```bash
 python chess_tournament_api.py
 ```
-
-6. **访问API文档**
-打开浏览器访问: http://localhost:8000/docs
 
 ## API接口说明
 
@@ -381,32 +370,16 @@ python chess_tournament_api.py
 - 向下兼容性保证
 - 平滑升级方案
 
-## Oracle数据库注意事项
-
-### 常见问题排查
-
-1. **连接问题**
-   ```bash
-   # 检查Oracle服务状态
-   lsnrctl status
-   
-   # 测试数据库连接
-   sqlplus username/password@hostname:port/service_name
-   
-   # 检查Python驱动
-   python -c "import cx_Oracle; print(cx_Oracle.version)"
-   ```
-
-2. **权限配置**
+1. **权限配置**
    - 确保用户具有CREATE TABLE、CREATE SEQUENCE、CREATE TRIGGER权限
    - 如需创建视图，需要CREATE VIEW权限
    - 生产环境建议创建专门的应用用户
 
-3. **字符集设置**
+2. **字符集设置**
    - 建议使用UTF-8字符集（AL32UTF8）
    - 确保客户端和服务器字符集一致
 
-4. **性能调优**
+3. **性能调优**
    - 定期更新表统计信息：`EXEC DBMS_STATS.GATHER_TABLE_STATS`
    - 监控慢查询日志
    - 使用Oracle AWR报告分析性能
@@ -431,5 +404,6 @@ expdp username/password directory=backup_dir dumpfile=chess_tournament_%U.dmp
 **项目维护者**: [xiaolongzhu44]
 **最后更新**: 2025年9月
 **版本**: 1.0.0
+
 
 
