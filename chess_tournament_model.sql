@@ -1,5 +1,4 @@
 -- 国际象棋比赛数据模型 - Oracle数据库设计
--- Oracle不需要CREATE DATABASE语句，直接在现有schema中创建表
 
 -- 1. 俱乐部表 (Clubs)
 CREATE TABLE Clubs (
@@ -461,3 +460,4 @@ INSERT INTO Tournaments (tournament_code, tournament_name, hosting_club_id, star
 COMMIT;
 
 -- 数据模型说明和查询示例将在下一个文件中提供
+
